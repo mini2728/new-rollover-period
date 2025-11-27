@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>轉倉設定管理系統</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg-body: #f1f5f9;
+      --bg-card: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --success: #10b981;
+      --radius: 8px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg-body);
+      color: var(--text-main);
+      padding: 40px 20px;
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* 版面容器 */
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* 卡片共用樣式 */
+    .card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+      position: relative;
+      transition: transform 0.2s ease;
+    }
+
+    .card h2 {
+      margin-top: 0;
+      margin-bottom: 24px;
+      font-size: 22px;
+      font-weight: 600;
+      color: #0f172a;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 16px;
+    }
+
+    /* 表單元素 */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      color: #334155;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="date"],
+    input[type="time"],
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background-color: #fff;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+      color: var(--text-main);
+      height: 42px; /* 固定高度 */
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    /* Checkbox */
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .checkbox-row input {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+    .checkbox-row span {
+      font-size: 14px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    /* 按鈕 */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 24px;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      width: 100%;
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+    .btn-primary:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+    
+    .btn-action {
+      padding: 6px 12px;
+      font-size: 13px;
+      height: 38px;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+    }
+    .btn-outline:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+    .btn-danger {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .btn-danger:hover {
+      background: #fecaca;
+    }
+
+    /* 連結樣式 */
+    .link-styled {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 13px;
+      margin-left: 8px;
+    }
+    .link-styled:hover {
+      text-decoration: underline;
+    }
+
+    /* 訊息提示 */
+    #loginMessage {
+      font-size: 14px;
+      margin-top: 12px;
+      text-align: center;
+      min-height: 20px;
+      padding: 8px;
+      border-radius: var(--radius);
+    }
+    #loginMessage.success { background: #dcfce7; color: #166534; }
+    #loginMessage.error   { background: #fee2e2; color: #991b1b; }
+
+    /* 鎖定遮罩 (Glassmorphism) */
+    .locked {
+      pointer-events: none;
+      user-select: none;
+      position: relative;
+      overflow: hidden; /* 防止模糊溢出 */
+    }
+    .locked::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 10;
+    }
+    .locked::after {
+      content: "🔒 請先登入以解鎖此功能";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      padding: 12px 24px;
+      border-radius: 99px;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+      font-weight: 600;
+      color: #475569;
+      z-index: 11;
+      border: 1px solid var(--border);
+    }
+
+    /* Grid Layout for Settings */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    /* 轉倉列表 Header */
+    .rollover-header {
+      display: grid;
+      grid-template-columns: 1.7fr 2fr 1.5fr 120px; /* 月份 | 日期 | 時間 | 操作 */
+      gap: 12px;
+      padding: 10px 16px;
+      background: #f8fafc;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* 轉倉列表 Row */
+    .rollover-row {
+      display: grid;
+      grid-template-columns: 1.7fr 2fr 1.5fr 120px;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 0 4px;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Select2 Customization to match theme */
+    .select2-container { width: 100% !important; }
+    .select2-container .select2-selection--single {
+      height: 42px !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--radius) !important;
+      padding: 6px !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 28px !important;
+      color: var(--text-main) !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 40px !important;
+    }
+    .select2-container--focus .select2-selection--single {
+      border-color: var(--primary) !important;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    /* Divider */
+    hr {
+      border: 0;
+      height: 1px;
+      background: var(--border);
+      margin: 30px 0;
+    }
+    
+    .section-title {
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* 既有轉倉排程表格 */
+    #existingRollovers {
+      font-size: 13px;
+      color: var(--text-main);
+    }
+    .rollover-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    .rollover-table th,
+    .rollover-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      font-size: 13px;
+    }
+    .rollover-table th {
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+    .modal.show {
+      display: flex;
+    }
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+    }
+    .modal-content {
+      position: relative;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      max-width: 700px;
+      width: 100%;
+      padding: 24px 24px 20px;
+      z-index: 1000;
+      max-height: 80vh;
+      overflow: auto;
+    }
+    .modal-content h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .modal-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .modal-actions {
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* 預覽表格 */
+    #schedulePreview table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 4px;
+    }
+    #schedulePreview th,
+    #schedulePreview td {
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      font-size: 13px;
+    }
+    #schedulePreview th {
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* 提交結果 log */
+    #submitLog {
+      margin-top: 8px;
+      font-size: 13px;
+      white-space: pre-line;
+      color: #0f172a;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    #submitLog div {
+      margin-bottom: 4px;
+    }
+  </style>
+
+  <!-- axios CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Select2 -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- 登入卡片 -->
+  <div class="card">
+    <h2>🔐 登入 Admin</h2>
+
+    <div class="form-group">
+      <label for="loginEmail">帳號 (Email)</label>
+      <input type="email" id="loginEmail" placeholder="name@example.com" />
+    </div>
+
+    <div class="form-group">
+      <label for="loginPassword">密碼</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" />
+    </div>
+
+    <div class="checkbox-row">
+      <label style="display:flex; align-items:center; cursor:pointer; margin:0;">
+        <input type="checkbox" id="rememberLogin" />
+        <span style="margin-left:8px;">記住登入資訊</span>
+      </label>
+    </div>
+
+    <button id="loginButton" class="btn btn-primary">立即登入</button>
+    <div id="loginMessage"></div>
+  </div>
+
+  <!-- 轉倉設定卡片 -->
+  <div class="card locked" id="featureCard">
+    <h2>⚙️ 轉倉排程設定</h2>
+
+    <!-- 第一列：商品與年份 -->
+    <div class="grid-2">
+      <div class="form-group">
+        <label for="symbolSelect">選擇商品</label>
+        <select id="symbolSelect">
+          <option value="">請先登入載入清單</option>
+        </select>
+        <input type="hidden" id="symbolId" />
+        <input type="hidden" id="exchange" />
+        <input type="hidden" id="symbol" />
+      </div>
+
+      <div class="form-group">
+        <label for="yearSelect">選擇年份</label>
+        <select id="yearSelect"></select>
+      </div>
+    </div>
+
+    <!-- 第二列：週期 -->
+    <div class="form-group">
+      <label for="cycleSelect">
+        轉倉週期 (月)
+        <a href="https://docs.google.com/spreadsheets/d/1NcraFH_stAucP-J51R0iW9BquIJB5k0MXQ5b0bfIluQ/edit?pli=1#gid=228871678"
+           target="_blank" class="link-styled">
+           (找不到週期？點此新增)
+        </a>
+      </label>
+      <select id="cycleSelect">
+        <option value="">請先登入載入週期</option>
+      </select>
+    </div>
+
+    <hr>
+
+    <div class="section-title">
+      <span>📅 轉倉月份與時間設定</span>
+    </div>
+
+    <!-- 表頭 (Header) -->
+    <div class="rollover-header">
+      <div>商品月份</div>
+      <div>轉倉日期</div>
+      <div>轉倉時間 (+0800)</div>
+      <div>操作</div>
+    </div>
+
+    <!-- 動態生成區域 -->
+    <div id="rolloverContainer"></div>
+
+    <hr>
+
+    <!-- ⬇⬇ 這邊是你要求改成「新增轉倉週期」 + log ⬇⬇ -->
+    <div class="section-title">
+      <button type="button" class="btn btn-primary btn-action" onclick="openScheduleModal()">新增轉倉週期</button>
+    </div>
+
+    <div id="submitLog">// 每一筆 API 傳送結果會顯示在這裡</div>
+    <!-- ⬆⬆ 這段取代原本 JSON 輸出區塊 ⬆⬆ -->
+
+    <hr>
+
+    <div class="section-title">
+      <span>📜 既有轉倉排程 (從伺服器載入)</span>
+    </div>
+    <div id="existingRollovers">// 請先選擇商品以載入既有排程</div>
+
+  </div>
+
+</div>
+
+<!-- Modal：確認即將送出的轉倉週期 -->
+<div id="scheduleModal" class="modal">
+  <div class="modal-backdrop" onclick="closeScheduleModal()"></div>
+  <div class="modal-content">
+    <h3>確認轉倉排程</h3>
+    <div class="modal-subtitle">
+      請確認以下轉倉週期是否正確，確認後會依序呼叫 API 新增：
+      <code>/api/admin/v3/futures-symbols/{商品ID}/rollovers</code>
+    </div>
+    <div id="schedulePreview">
+      <!-- 預覽表格會由 JS 動態插入 -->
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-outline btn-action" onclick="closeScheduleModal()">取消</button>
+      <button type="button" class="btn btn-primary btn-action" onclick="submitRollovers()">確認送出</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ========== 常數 / DOM ==========
+  const LOGIN_API   = "https://console.stranity.org/api/public/user/login";
+  const SYMBOL_API  = "https://console.stranity.org/api/admin/v3/futures-symbols";
+  const CYCLE_API   = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLha6OuaII7H7ka6LGVzqIYWC2E7R-1P2qT_sLLM_W-TK-ZcCixwhFbu6aDbKRzJQap9kFK53FIlIx-gmfRKrhuruttnMRQ1_Y91EDAac9Z_oXVqDcHQ0iBklsxfErEJrdezhJajNJu4wifzdQah_zjyEnduqeJ45VbW6lVwsG-tgU5S18Q8xRqecWF3jC8Lkrga0sDr-2NgxDGu7c_a36-N8KQ12qf0ISVCJTVYUDFHahfgEob5x-dP3LwIXXmdZCQItu766a7o02vXaLkWsc1OI5GbeQ&lib=MG8XmPR3E24yCM7_Xma50bTHhSIBa6JR9";
+  const ROLLOVER_API_BASE = "https://console.stranity.org/api/admin/v3/futures-symbols";
+
+  const cycleSelect   = document.getElementById("cycleSelect");
+  const container     = document.getElementById("rolloverContainer");
+  const yearSelect    = document.getElementById("yearSelect");
+  const loginEmail    = document.getElementById("loginEmail");
+  const loginPassword = document.getElementById("loginPassword");
+  const rememberLogin = document.getElementById("rememberLogin");
+  const loginButton   = document.getElementById("loginButton");
+  const loginMessage  = document.getElementById("loginMessage");
+  const featureCard   = document.getElementById("featureCard");
+  const existingRollovers = document.getElementById("existingRollovers");
+  const scheduleModal = document.getElementById("scheduleModal");
+  const schedulePreview = document.getElementById("schedulePreview");
+  const submitLog = document.getElementById("submitLog");
+
+  let isLoggedIn = false;
+  let isSubmitting = false;
+  let currentCycleMonths = [];
+  let currentBuiltSchedules = []; // ⭐ 存 modal 裡要送出的資料
+
+  // ========== 初始化 ==========
+  document.addEventListener("DOMContentLoaded", () => {
+    initYearOptions();
+    restoreLoginFromLocalStorage();
+  });
+
+  // ========== 年份：今年 ± 2 年 ==========
+  function initYearOptions() {
+    const currentYear = new Date().getFullYear();
+    yearSelect.innerHTML = "";
+    for (let y = currentYear - 2; y <= currentYear + 2; y++) {
+      const opt = document.createElement("option");
+      opt.value = y;
+      opt.textContent = y;
+      if (y === currentYear) opt.selected = true;
+      yearSelect.appendChild(opt);
+    }
+  }
+
+  // ========== 功能卡片鎖定 / 解鎖 ==========
+  function setFeatureLocked(locked) {
+    if (locked) {
+      featureCard.classList.add("locked");
+    } else {
+      featureCard.classList.remove("locked");
+    }
+  }
+
+  // ========== 登入相關 ==========
+  function restoreLoginFromLocalStorage() {
+    const savedRemember = localStorage.getItem("str_remember_login") === "true";
+    rememberLogin.checked = savedRemember;
+
+    if (savedRemember) {
+      const savedEmail = localStorage.getItem("str_admin_email") || "";
+      const savedPwd   = localStorage.getItem("str_admin_password") || "";
+      loginEmail.value = savedEmail;
+      loginPassword.value = savedPwd;
+    }
+  }
+
+  async function handleLogin() {
+    const email = loginEmail.value.trim();
+    const pwd   = loginPassword.value;
+
+    loginMessage.textContent = "";
+    loginMessage.className = "";
+
+    if (!email || !pwd) {
+      loginMessage.textContent = "請輸入帳號與密碼";
+      loginMessage.classList.add("error");
+      return;
+    }
+
+    loginButton.disabled = true;
+    loginButton.textContent = "登入中…";
+
+    try {
+      const res = await axios.post(LOGIN_API, {
+        email: email,
+        account: email,
+        password: pwd
+      });
+
+      const data = res.data || {};
+      const successFlag = data?.error?.success;
+
+      if (!successFlag) throw new Error("API returned success = false");
+
+      let token = data.result?.accessToken || data.accessToken || data.token || data.data?.accessToken;
+      if (!token) throw new Error("無效的 Token");
+
+      localStorage.setItem("str_access_token", token);
+
+      if (rememberLogin.checked) {
+        localStorage.setItem("str_admin_email", email);
+        localStorage.setItem("str_admin_password", pwd);
+        localStorage.setItem("str_remember_login", "true");
+      } else {
+        localStorage.removeItem("str_admin_email");
+        localStorage.removeItem("str_admin_password");
+        localStorage.setItem("str_remember_login", "false");
+      }
+
+      isLoggedIn = true;
+      setFeatureLocked(false);
+
+      loginMessage.className = "success";
+      loginMessage.textContent = "登入成功！";
+
+      loadCycles();
+      loadSymbolList();
+    } catch (err) {
+      console.error("Login Error", err);
+      isLoggedIn = false;
+      setFeatureLocked(true);
+      loginMessage.className = "error";
+      loginMessage.textContent = "登入失敗，請檢查帳密。";
+    } finally {
+      loginButton.disabled = false;
+      loginButton.textContent = "立即登入";
+    }
+  }
+
+  loginButton.addEventListener("click", handleLogin);
+
+  // ========== 載入商品清單 ==========
+  async function loadSymbolList() {
+    const token = localStorage.getItem("str_access_token");
+    if (!token) return;
+
+    try {
+      const res = await axios.get(SYMBOL_API, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.data?.error?.success) {
+        console.error("Load Symbols Failed");
+        return;
+      }
+
+      const list = res.data.result || [];
+      const options = list.map(item => ({
+        id: String(item.id),  
+        text: `${item.exchange} ${item.symbol}`,
+        exchange: item.exchange,
+        symbol: item.symbol
+      }));
+
+      const $select = $("#symbolSelect");
+      if ($select.hasClass("select2-hidden-accessible")) {
+        $select.select2("destroy");
+      }
+
+      $select.empty();
+      $select.select2({
+        data: options,
+        placeholder: "🔍 搜尋商品（輸入關鍵字）",
+        allowClear: true,
+        width: '100%'
+      });
+
+      $select.val(null).trigger("change");
+
+      $select.on("select2:select", function (e) {
+        const selected = e.params.data;
+        document.getElementById("symbolId").value = selected.id;
+        document.getElementById("exchange").value = selected.exchange;
+        document.getElementById("symbol").value = selected.symbol;
+
+        loadExistingRollovers(selected.id, selected.symbol);
+      }).on("select2:clear", function () {
+        document.getElementById("symbolId").value = "";
+        document.getElementById("exchange").value = "";
+        document.getElementById("symbol").value = "";
+        existingRollovers.textContent = "// 請先選擇商品以載入既有排程";
+      });
+
+    } catch (err) {
+      console.error("Load Symbols Error", err);
+    }
+  }
+
+  // ========== 載入週期 ==========
+  async function loadCycles() {
+    try {
+      const res = await axios.get(CYCLE_API);
+      let raw = res.data;
+      let rows = (typeof raw === "string") ? JSON.parse(raw) : raw;
+
+      let dataRows = [];
+      if (Array.isArray(rows)) dataRows = rows;
+      else if (rows?.values) dataRows = rows.values;
+      else if (rows?.rows) dataRows = rows.rows;
+
+      const normalized = dataRows
+        .map(row => Array.isArray(row) ? row.join(",") : String(row))
+        .map(r => r.trim())
+        .filter(r => r !== "");
+      
+      fillCycleSelect(normalized);
+    } catch (err) {
+      console.error("Load Cycles Error", err);
+      cycleSelect.innerHTML = "<option value=''>載入週期失敗</option>";
+    }
+  }
+
+  function fillCycleSelect(rows) {
+    cycleSelect.innerHTML = "";
+    const defaultOpt = document.createElement("option");
+    defaultOpt.value = "";
+    defaultOpt.textContent = "請選擇轉倉週期...";
+    cycleSelect.appendChild(defaultOpt);
+
+    rows.forEach(row => {
+      const clean = row.replace(/\s+/g, "");
+      const opt = document.createElement("option");
+      opt.value = clean;
+      opt.textContent = clean;
+      cycleSelect.appendChild(opt);
+    });
+  }
+
+  // ========== 轉倉週期 / 月份 ==========
+  const monthMap = {
+    '01月': 'F', '02月': 'G', '03月': 'H', '04月': 'J',
+    '05月': 'K', '06月': 'M', '07月': 'N', '08月': 'Q',
+    '09月': 'U', '10月': 'V', '11月': 'X', '12月': 'Z'
+  };
+  const codeToMonthMap = {
+    'F': '01月', 'G': '02月', 'H': '03月', 'J': '04月',
+    'K': '05月', 'M': '06月', 'N': '07月', 'Q': '08月',
+    'U': '09月', 'V': '10月', 'X': '11月', 'Z': '12月'
+  };
+
+  const ALL_MONTHS = [
+    '01月','02月','03月','04月','05月','06月',
+    '07月','08月','09月','10月','11月','12月'
+  ];
+
+  function getCycleMonths() {
+    return currentCycleMonths.length ? currentCycleMonths : ALL_MONTHS;
+  }
+
+  cycleSelect.addEventListener("change", function () {
+    if (!isLoggedIn) {
+      alert("請先登入");
+      this.value = "";
+      return;
+    }
+
+    container.innerHTML = "";
+    if (!this.value) {
+      currentCycleMonths = [];
+      return;
+    }
+
+    const months = this.value.split(",").map(m => m.trim());
+    currentCycleMonths = months;
+
+    months.forEach(m => createRow(m));
+  });
+
+  // ========== 產生一列 ==========
+  function createRow(monthText) {
+    const row = document.createElement("div");
+    row.className = "rollover-row";
+
+    // 1. 月份選單 + +/- 控制
+    const monthWrapper = document.createElement("div");
+    monthWrapper.style.display = "flex";
+    monthWrapper.style.alignItems = "center";
+    monthWrapper.style.gap = "6px";
+
+    const monthSelect = document.createElement("select");
+    for (let i = 1; i <= 12; i++) {
+      const m = i.toString().padStart(2, "0") + "月";
+      const opt = document.createElement("option");
+      opt.value = m;
+      opt.textContent = m;
+      if (m === monthText) opt.selected = true;
+      monthSelect.appendChild(opt);
+    }
+
+    function shiftMonth(delta) {
+      const cycle = getCycleMonths();
+      if (!cycle.length) return;
+
+      const cur = monthSelect.value;
+      let idx = cycle.indexOf(cur);
+      if (idx === -1) {
+        idx = 0;
+      }
+
+      let newIdx = (idx + delta + cycle.length) % cycle.length;
+      monthSelect.value = cycle[newIdx];
+    }
+
+    const minusBtn = document.createElement("button");
+    minusBtn.type = "button";
+    minusBtn.className = "btn btn-outline btn-action";
+    minusBtn.textContent = "−";
+    minusBtn.title = "前一期月份";
+    minusBtn.style.padding = "0 10px";
+    minusBtn.onclick = () => shiftMonth(-1);
+
+    const plusBtnMonth = document.createElement("button");
+    plusBtnMonth.type = "button";
+    plusBtnMonth.className = "btn btn-outline btn-action";
+    plusBtnMonth.textContent = "+";
+    plusBtnMonth.title = "後一期月份";
+    plusBtnMonth.style.padding = "0 10px";
+    plusBtnMonth.onclick = () => shiftMonth(1);
+
+    monthWrapper.appendChild(minusBtn);
+    monthWrapper.appendChild(monthSelect);
+    monthWrapper.appendChild(plusBtnMonth);
+    row.appendChild(monthWrapper);
+
+    // 2. 日期輸入
+    const dateWrapper = document.createElement("div");
+    const dateInput = document.createElement("input");
+    dateInput.type = "date";
+    dateWrapper.appendChild(dateInput);
+    row.appendChild(dateWrapper);
+
+    // 3. 時間輸入
+    const timeWrapper = document.createElement("div");
+    const timeInput = document.createElement("input");
+    timeInput.type = "time";
+    timeInput.value = "22:19"; 
+    timeWrapper.appendChild(timeInput);
+    row.appendChild(timeWrapper);
+
+    // 4. 操作按鈕
+    const actionWrapper = document.createElement("div");
+    actionWrapper.style.display = "flex";
+    actionWrapper.style.gap = "6px";
+
+    const addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.className = "btn btn-outline btn-action";
+    addBtn.textContent = "+";
+    addBtn.title = "在下方插入一列（同月份）";
+    addBtn.onclick = () => {
+      const newRow = createRow(monthSelect.value);
+      container.insertBefore(newRow, row.nextSibling);
+    };
+
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "btn btn-danger btn-action";
+    delBtn.textContent = "✕";
+    delBtn.title = "刪除此列";
+    delBtn.onclick = () => container.removeChild(row);
+
+    actionWrapper.appendChild(addBtn);
+    actionWrapper.appendChild(delBtn);
+    row.appendChild(actionWrapper);
+
+    container.appendChild(row);
+    return row;
+  }
+
+  // ========== 從畫面資料建構排程 JSON（不送出，只回傳陣列） ==========
+  function buildScheduleData() {
+    const rootSymbol = document.getElementById("symbol").value; 
+    const year = parseInt(document.getElementById("yearSelect").value, 10);
+    const yearDigit = year % 10;
+
+    if (!rootSymbol) {
+      alert("請先選擇商品");
+      return null;
+    }
+
+    const rows = Array.from(container.children);
+    if (rows.length === 0) {
+      alert("請設定至少一筆資料");
+      return null;
+    }
+
+    const rowData = rows.map(row => {
+      const monthSelect = row.querySelector("select");
+      const dateInput   = row.querySelector('input[type="date"]');
+      const timeInput   = row.querySelector('input[type="time"]');
+
+      return {
+        monthText: monthSelect ? monthSelect.value : null,
+        dateVal: dateInput ? dateInput.value : "",
+        timeVal: (timeInput && timeInput.value) ? timeInput.value : "22:19"
+      };
+    });
+
+    const result = [];
+
+    rowData.forEach((cur, index) => {
+      if (!cur.monthText) return;
+      if (!cur.dateVal) return;
+
+      const monthCode = monthMap[cur.monthText];
+      if (!monthCode) return;
+
+      const oldReal = rootSymbol + monthCode + String(yearDigit);
+
+      const nextIndex = (index + 1) % rowData.length;
+      const next = rowData[nextIndex];
+
+      if (!next.monthText) return;
+      const newMonthCode = monthMap[next.monthText];
+      if (!newMonthCode) return;
+
+      let newYearDigit = yearDigit;
+      if (nextIndex <= index) {
+        newYearDigit = (year + 1) % 10;
+      }
+
+      const newReal = rootSymbol + newMonthCode + String(newYearDigit);
+      const scheduledAt = `${cur.dateVal}T${cur.timeVal}:00.000Z`;
+
+      result.push({
+        old_real_symbol: oldReal,
+        new_real_symbol: newReal,
+        scheduled_at: scheduledAt
+      });
+    });
+
+    if (!result.length) {
+      alert("目前設定中沒有有效的轉倉資料（請確認每列都有月份與日期）。");
+      return null;
+    }
+
+    return result;
+  }
+
+  // ========== Modal 開關 ==========
+  function openScheduleModal() {
+    const symbolId = document.getElementById("symbolId").value;
+    if (!symbolId) {
+      alert("請先選擇商品");
+      return;
+    }
+
+    const schedules = buildScheduleData();
+    if (!schedules || !schedules.length) return;
+
+    currentBuiltSchedules = schedules;
+
+    // 組預覽表格：年份、月份、轉倉時間
+    let html = `<table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>年份</th>
+          <th>月份 (由 old_real_symbol 解析)</th>
+          <th>old_real_symbol</th>
+          <th>new_real_symbol</th>
+          <th>轉倉時間</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+    schedules.forEach((item, idx) => {
+      const yearText = parseYearFromOldRealSymbol(item.old_real_symbol);
+      const monthText = parseMonthFromOldRealSymbol(item.old_real_symbol);
+      const timeText = formatUtcDateTime(item.scheduled_at);
+
+      html += `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${yearText}</td>
+          <td>${monthText}</td>
+          <td>${item.old_real_symbol}</td>
+          <td>${item.new_real_symbol}</td>
+          <td>${timeText}</td>
+        </tr>`;
+    });
+
+    html += `</tbody></table>`;
+    schedulePreview.innerHTML = html;
+
+    scheduleModal.classList.add("show");
+  }
+
+  function closeScheduleModal() {
+    if (isSubmitting) return; // 送出中避免關閉
+    scheduleModal.classList.remove("show");
+  }
+
+  // ========== 送出排程：逐筆呼叫 API，sleep 0.5 秒 ==========
+  async function submitRollovers() {
+    if (isSubmitting) return;
+    const token = localStorage.getItem("str_access_token");
+    const symbolId = document.getElementById("symbolId").value;
+    const symbol = document.getElementById("symbol").value;
+
+    if (!token) {
+      alert("尚未登入，請先登入");
+      return;
+    }
+    if (!symbolId) {
+      alert("請先選擇商品");
+      return;
+    }
+    if (!currentBuiltSchedules || !currentBuiltSchedules.length) {
+      alert("目前沒有可送出的排程，請先設定轉倉月份與時間");
+      return;
+    }
+
+    isSubmitting = true;
+    submitLog.innerHTML = "";
+    const url = `${ROLLOVER_API_BASE}/${symbolId}/rollovers`;
+
+    for (let i = 0; i < currentBuiltSchedules.length; i++) {
+      const payload = currentBuiltSchedules[i];
+      try {
+        const res = await axios.post(url, payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        submitLog.innerHTML += `<div>✅ 第 ${i+1} 筆：${payload.old_real_symbol} → ${payload.new_real_symbol} 送出成功</div>`;
+      } catch (err) {
+        console.error("Submit rollover error", err);
+        const msg = err?.response?.data ? JSON.stringify(err.response.data) : err.message;
+        submitLog.innerHTML += `<div>❌ 第 ${i+1} 筆：${payload.old_real_symbol} → ${payload.new_real_symbol} 送出失敗：${msg}</div>`;
+      }
+
+      await new Promise(r => setTimeout(r, 500)); // sleep 0.5 秒
+    }
+
+    isSubmitting = false;
+    closeScheduleModal();
+
+    // 重新載入既有轉倉排程
+    if (symbolId) {
+      loadExistingRollovers(symbolId, symbol);
+    }
+  }
+
+  // ========== 輔助解析 / 格式化 ==========
+  function parseMonthFromOldRealSymbol(oldReal) {
+    if (!oldReal || oldReal.length < 2) return "-";
+    const len = oldReal.length;
+    const monthCode = oldReal[len - 2];
+    const yearDigit = oldReal[len - 1];
+    const monthZh = codeToMonthMap[monthCode] || "";
+    if (!monthZh) return `${monthCode}${yearDigit}`;
+    return `${monthZh} (${oldReal})`;
+  }
+
+  function formatUtcDateTime(isoString) {
+    if (!isoString) return "-";
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return isoString;
+
+    const local = new Date(d.getTime() + 8 * 60 * 60 * 1000);
+
+    const y = local.getUTCFullYear();
+    const m = String(local.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(local.getUTCDate()).padStart(2, "0");
+    const hh = String(local.getUTCHours()).padStart(2, "0");
+    const mm = String(local.getUTCMinutes()).padStart(2, "0");
+
+    return `${y}-${m}-${day} ${hh}:${mm} (+0800)`;
+  }
+
+  function formatState(state) {
+    if (state === 4) return "完成";
+    if (state === 0) return "無";
+    return String(state ?? "");
+  }
+
+  function parseYearFromOldRealSymbol(oldReal) {
+    if (!oldReal || oldReal.length < 1) return "-";
+
+    const yearDigit = parseInt(oldReal.slice(-1), 10);
+    if (isNaN(yearDigit)) return "-";
+
+    const currentYear = new Date().getFullYear();
+    const currentDecade = Math.floor(currentYear / 10) * 10;
+
+    let candidate = currentDecade + yearDigit;
+    if (Math.abs(candidate - currentYear) > 5) {
+      candidate -= 10;
+    }
+
+    return candidate;
+  }
+
+  // ========== 載入既有轉倉設定 ==========
+  async function loadExistingRollovers(symbolId, symbol) {
+    const token = localStorage.getItem("str_access_token");
+    if (!token || !symbolId) {
+      existingRollovers.textContent = "// 尚未登入或商品 ID 無效";
+      return;
+    }
+
+    existingRollovers.textContent = "載入中…";
+
+    try {
+      const url = `${ROLLOVER_API_BASE}/${symbolId}/rollovers`;
+      const res = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.data?.error?.success) {
+        existingRollovers.textContent = "載入失敗：API 回傳 success = false";
+        return;
+      }
+
+      let list = res.data.result || [];
+      if (!list.length) {
+        existingRollovers.textContent = "此商品目前尚無既有轉倉排程。";
+        return;
+      }
+
+      list = [...list].sort((a, b) => {
+        const da = new Date(a.scheduled_at);
+        const db = new Date(b.scheduled_at);
+        return db - da;
+      });
+
+      list = list.slice(0, 20);
+
+      let html = `<table class="rollover-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>年份</th>
+            <th>月份 (由 old_real_symbol 解析)</th>
+            <th>轉倉時間</th>
+            <th>狀態</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      list.forEach(item => {
+        const yearText = parseYearFromOldRealSymbol(item.old_real_symbol);
+        const monthText = parseMonthFromOldRealSymbol(item.old_real_symbol);
+        const timeText = formatUtcDateTime(item.scheduled_at);
+        const stateText = formatState(item.state);
+
+        html += `
+          <tr>
+            <td>${item.id}</td>
+            <td>${yearText}</td>
+            <td>${monthText}</td>
+            <td>${timeText}</td>
+            <td>${stateText}</td>
+          </tr>`;
+      });
+
+      html += `</tbody></table>`;
+      existingRollovers.innerHTML = html;
+    } catch (err) {
+      console.error("Load Existing Rollovers Error", err);
+      existingRollovers.textContent = "載入失敗，請稍後再試。";
+    }
+  }
+
+</script>
+</body>
+</html>
