@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>轉倉設定管理系統 V1.0</title>
+  <title>轉倉設定管理系統 V2.0</title>
 
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -952,13 +952,15 @@
       }
 
       const newReal = rootSymbol + newMonthCode + String(newYearDigit);
-      const scheduledAt = `${cur.dateVal}T${cur.timeVal}:00.000Z`;
 
-      result.push({
-        old_real_symbol: oldReal,
-        new_real_symbol: newReal,
-        scheduled_at: scheduledAt
-      });
+        // 這一行改掉：用「台灣時間 → UTC」轉換
+        const scheduledAt = local0800ToUtc(cur.dateVal, cur.timeVal);
+
+        result.push({
+            old_real_symbol: oldReal,
+            new_real_symbol: newReal,
+            scheduled_at: scheduledAt
+        });
     });
 
     if (!result.length) {
@@ -1099,6 +1101,23 @@
 
     return `${y}-${m}-${day} ${hh}:${mm} (+0800)`;
   }
+
+  function local0800ToUtc(dateStr, timeStr) {
+    // 預期 dateStr = "2026-03-09", timeStr = "22:19"
+    if (!dateStr || !timeStr) {
+        return `${dateStr}T${timeStr}:00.000Z`;
+    }
+
+    // 強制當成 +08:00 的時間
+    const d = new Date(`${dateStr}T${timeStr}:00+08:00`);
+    if (isNaN(d.getTime())) {
+        // 轉不出來就退回原本格式，避免整個壞掉
+        return `${dateStr}T${timeStr}:00.000Z`;
+    }
+
+    // toISOString() 會回傳 UTC 時間（結尾帶 Z）
+    return d.toISOString();
+    }
 
   function formatState(state) {
     if (state === 4) return "完成";
